@@ -1,0 +1,3 @@
+(spec 2 8 x y (ite (neq (and (xor (add x y) x) (xor (add x y) y)) 0:8) (ite (slt (or x y) 0:8) -128:8 127:8) (add x y)))
+
+(lib (fun sadd.sat x y (ite (sgt (add (concat (ite (slt x 0:8) -1:8 0:8) x) (concat (ite (slt y 0:8) -1:8 0:8) y)) 0x7F:16) 0x7F:8 (ite (slt (add (concat (ite (slt x 0:8) -1:8 0:8) x) (concat (ite (slt y 0:8) -1:8 0:8) y)) 0xFF00:16) 0x80:8 (add x y)))))

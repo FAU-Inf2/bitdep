@@ -1,0 +1,2 @@
+(spec 1 32 x (sub (xor x (ashr x 0x1F:32)) (ashr x 0x1F:32)))
+(lib sub xor ashr (const 32 31))

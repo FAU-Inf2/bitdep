@@ -1,0 +1,2 @@
+(spec 2 32 x y (sub (or x y) (lshr (xor x y) 1:32)))
+(lib sub or lshr xor (const 32 1))

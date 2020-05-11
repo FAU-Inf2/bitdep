@@ -1,0 +1,2 @@
+(spec 1 32 x (add x (not x)))
+(lib (const 32 0xFFFFFFFF))

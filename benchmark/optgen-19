@@ -1,0 +1,2 @@
+(spec 1 32 x (or x (sub 0x7FFFFFFF:32 x)))
+(lib or (const 32 0x7FFFFFFF))

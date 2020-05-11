@@ -1,0 +1,3 @@
+(spec 2 8 x y (or (ite (slt (add (concat (ite (slt x 0:8) -1:8 0:8) x) (concat (ite (slt y 0:8) -1:8 0:8) y)) -128:16) 1:8 0:8) (xor (ite (sle (add (concat (ite (slt x 0:8) -1:8 0:8) x) (concat (ite (slt y 0:8) -1:8 0:8) y)) 127:16) 1:8 0:8) 1:8)))
+
+(lib (fun sadd.with.overflow x y (lshr (and (xor (add x y) x) (xor (add x y) y)) 7:8)))

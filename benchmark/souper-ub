@@ -1,0 +1,3 @@
+(spec 1 32 y (sub 0:32 (shl 77777:32 y)))
+
+(lib shl (const 32 4294889519))

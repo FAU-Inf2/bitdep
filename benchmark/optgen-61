@@ -1,0 +1,3 @@
+(spec 2 32 x c (sub (xor x c) 0x80000000:32))
+
+(lib xor add (const 32 0x80000000))

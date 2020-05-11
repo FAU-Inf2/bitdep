@@ -1,0 +1,3 @@
+(spec 2 32 x y (sub (and x y) x))
+
+(lib neg and not)

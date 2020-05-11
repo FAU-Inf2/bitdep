@@ -1,0 +1,2 @@
+(spec 2 32 x y (add (and x y) (lshr (xor x y) 1:32)))
+(lib add and lshr xor (const 32 1))

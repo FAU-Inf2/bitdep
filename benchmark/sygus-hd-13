@@ -1,0 +1,2 @@
+(spec 1 32 x (or (ashr x 0x1F:32) (lshr (neg x) 0x1F:32)))
+(lib or ashr lshr neg (const 32 31))

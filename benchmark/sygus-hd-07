@@ -1,0 +1,2 @@
+(spec 1 32 x (and (not x) (add x 1:32)))
+(lib and not add (const 32 1))

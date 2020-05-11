@@ -1,0 +1,3 @@
+(spec 2 32 x y (ite (neq y 0:32) (add (mul x 0:32) 17:32) (add (mul x 0:32) 21:32)))
+
+(lib (const 32 17) (const 32 21) (fun iteneq x y z (ite (neq x 0:32) y z)))

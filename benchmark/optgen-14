@@ -1,0 +1,2 @@
+(spec 1 32 x (and (neg x) 1:32))
+(lib and (const 32 1))

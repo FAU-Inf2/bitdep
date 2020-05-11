@@ -1,0 +1,3 @@
+(spec 2 32 x c (not (sub c x)))
+
+(lib add not)

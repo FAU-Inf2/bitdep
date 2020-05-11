@@ -1,0 +1,2 @@
+(spec 1 32 x (and x (neg x)))
+(lib and neg)

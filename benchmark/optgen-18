@@ -1,0 +1,2 @@
+(spec 2 32 x y (or x (and x y)))
+(lib or)

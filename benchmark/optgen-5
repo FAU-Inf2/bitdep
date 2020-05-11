@@ -1,0 +1,2 @@
+(spec 1 32 x (add x (and x 0x80000000:32)))
+(lib and (const 32 0x7FFFFFFF))

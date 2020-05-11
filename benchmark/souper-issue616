@@ -1,0 +1,3 @@
+(spec 1 234 x (sub (ite (slt (add (lshr x 1:234) (add (lshr x 1:234) (and x 1:234))) 0:234) -1:234 (add x x)) x))
+
+(lib ashr xor (const 234 233))

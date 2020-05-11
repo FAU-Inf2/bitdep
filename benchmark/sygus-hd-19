@@ -1,0 +1,2 @@
+(spec 3 32 x m k (xor x (xor (lshr (and (xor (lshr x k) x) m) k) (and (xor (lshr x k) x) m))))
+(lib xor xor lshr and xor lshr)

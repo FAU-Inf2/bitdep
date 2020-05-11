@@ -1,0 +1,112 @@
+apply plugin: "java"
+apply plugin: "c"
+
+def JNI_INCLUDE_DIR = System.properties["java.home"] + "/../include"
+def JNI_LIB_DIR = System.properties["java.home"] + "/../lib"
+
+println "Found JNI include directory: " + JNI_INCLUDE_DIR
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	compile group: 'com.google.guava', name: 'guava', version: '25.1-jre'
+
+	testCompile group: 'junit', name: 'junit', version: '4.+'
+	testCompile group: 'com.tngtech.java', name: 'junit-dataprovider', version: '1.10+'
+}
+
+model {
+	repositories {
+		libs(PrebuiltLibraries) {
+			yices {
+				binaries.withType(SharedLibraryBinary) {
+					sharedLibraryFile = file(projectDir.getPath() + "/libs/libyices.so")
+				}
+			}
+		}
+	}
+
+	binaries {
+		withType(SharedLibraryBinarySpec) {
+			cCompiler.args "-I" + JNI_INCLUDE_DIR, "-I" + JNI_INCLUDE_DIR + "/linux"
+
+			if (component.baseName == "yicesjni") {
+				lib library: "yices", linkage: "shared"
+			}
+		}
+		withType(StaticLibraryBinarySpec) {
+			cCompiler.args "-I" + JNI_INCLUDE_DIR, "-I" + JNI_INCLUDE_DIR + "/linux"
+		}
+	}
+
+	components {
+		yicesjni(NativeLibrarySpec) {
+			sources {
+				c {
+					source {
+						srcDir "src/main/c"
+						include "yices/*.c"
+					}
+					exportedHeaders {
+						srcDir "src/main/c/yices"
+					}
+				}
+			}
+		}
+	}
+}
+
+sourceSets {
+	testData {
+		java {
+			compileClasspath += main.output
+			runtimeClasspath += main.output
+		}
+	}
+
+	test {
+		java {
+			compileClasspath += testData.output
+			runtimeClasspath += testData.output
+		}
+	}
+}
+
+configurations {
+	testDataCompile.extendsFrom compile
+	testDataRuntime.extendsFrom runtime
+
+	testCompile.extendsFrom testDataCompile
+	testRuntime.extendsFrom testDataRuntime
+}
+
+test {
+	environment "LD_LIBRARY_PATH", "libs:build/libs/yicesjni/shared"
+	systemProperty "java.library.path", "libs:build/libs/yicesjni/shared"
+}
+
+// Task to run the synthesizer shell
+task synthShell(description: "Runs a shell for the synthesizer") << {
+	def classpath = sourceSets.main.runtimeClasspath
+
+	def command = [
+		"java",
+		"-cp", classpath.collect().join(System.getProperty("path.separator")),
+		"synth.SynthesizerShell"
+	]
+
+	def procBuilder = new ProcessBuilder(command)
+			.redirectOutput(ProcessBuilder.Redirect.INHERIT)
+			.redirectInput(ProcessBuilder.Redirect.INHERIT)
+			.redirectError(ProcessBuilder.Redirect.INHERIT)
+
+	procBuilder.environment().put("LD_LIBRARY_PATH", "libs:build/libs/yicesjni/shared")
+
+	procBuilder.start().waitFor();
+}
+synthShell.dependsOn 'classes'
+synthShell.dependsOn 'yicesjniSharedLibrary'
+
+build.dependsOn 'jar'

@@ -1,0 +1,2 @@
+(spec 1 32 x (not (neg x)))
+(lib sub (const 32 1))

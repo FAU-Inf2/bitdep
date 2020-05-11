@@ -1,0 +1,3 @@
+(spec 2 32 x y (or (shl x (and y 31:32)) (lshr x (sub 32:32 (and y 31:32)))))
+
+(lib (fun fshl x y z (extract 32 63 (shl (concat x y) (concat 0:32 z)))) and (const 32 31))

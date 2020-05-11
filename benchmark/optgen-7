@@ -1,0 +1,2 @@
+(spec 1 32 x (add (and x 0x7FFFFFFF:32) (and x 0x7FFFFFFF:32)))
+(lib add)

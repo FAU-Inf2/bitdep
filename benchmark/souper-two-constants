@@ -1,0 +1,2 @@
+(spec 1 16 x (mul (add (add x 5:16) 7:16) 32:16))
+(lib add shl (const 16 12) (const 16 5))

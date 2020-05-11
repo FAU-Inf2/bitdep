@@ -1,0 +1,2 @@
+(spec 1 32 x (or (add x (and (neg x) x)) (udiv (lshr (xor x (and (neg x) x)) 2:32) (and (neg x) x))))
+(lib or add and neg udiv lshr xor (const 32 2))
