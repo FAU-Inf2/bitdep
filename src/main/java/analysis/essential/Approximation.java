@@ -21,14 +21,14 @@ package analysis.essential;
 
 
 
-public interface Approximation {
-	Approximation and(Approximation other);
-	Approximation andM(Approximation other);
-	Approximation xor(Approximation other);
-	Approximation xorM(Approximation other);
-	Approximation not();
-	Approximation notM();
-	Approximation join(Approximation other);
+public interface Approximation<T extends Approximation> {
+	T and(T other);
+	T andM(T other);
+	T xor(T other);
+	T xorM(T other);
+	T not();
+	T notM();
+	T join(T other);
 	boolean isConstant(int value);
 
 }

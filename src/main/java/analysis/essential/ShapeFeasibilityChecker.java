@@ -22,8 +22,6 @@ package analysis.essential;
 import java.util.*;
 import java.util.function.Function;
 
-import com.google.common.collect.Iterables;
-
 import smt.*;
 import synth.FunctionParser;
 import synth.LibraryFunction;

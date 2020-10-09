@@ -29,9 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.IntFunction;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-
 import smt.Ast;
 import smt.BitVector;
 import smt.BoolAllDifferent;
@@ -53,7 +50,7 @@ import util.Pair;
 
 
 
-public class ApproximationBuilder<T extends Approximation>
+public class ApproximationBuilder<T extends Approximation<T>>
 		implements TreeTransformer<MultiBitsApproximation<T>> {
 
 	private IntFunction<T> constBuilder;
@@ -126,14 +123,14 @@ public class ApproximationBuilder<T extends Approximation>
 			return childrenRes.get(0);
 		}
 
-		Approximation result = distinct(childrenRes.get(width - 2).toList(),
+		T result = distinct(childrenRes.get(width - 2).toList(),
 				childrenRes.get(width - 1).toList());
 		for (int i = width - 3; i >= 0; --i) {
 			for (int j = i + 2; j < width; ++j) {
 				result = result.and(distinct(childrenRes.get(i).toList(), childrenRes.get(j).toList()));
 			}
 		}
-		return new MultiBitsApproximation<>(Collections.singletonList((T) result));
+		return new MultiBitsApproximation<>(Collections.singletonList(result));
 	}
 
 
@@ -178,7 +175,7 @@ public class ApproximationBuilder<T extends Approximation>
 					case SGE:
 						// Return inverted most significant bit of 'left'
 						return new MultiBitsApproximation<>(Collections.singletonList(
-								(T) ((MultiBitsApproximation<T>) get(tree.getLeft()))
+								((MultiBitsApproximation<T>) get(tree.getLeft()))
 									.get(tree.getLeft().getWidth() - 1).not()));
 				}
 			}
@@ -187,7 +184,7 @@ public class ApproximationBuilder<T extends Approximation>
 		final MultiBitsApproximation<T> left = (MultiBitsApproximation<T>) get(tree.getLeft());
 		final MultiBitsApproximation<T> right = (MultiBitsApproximation<T>) get(tree.getRight());
 
-		Approximation result;
+		T result;
 
 		switch (tree.getKind()) {
 			case EQUALS:
@@ -227,7 +224,7 @@ public class ApproximationBuilder<T extends Approximation>
 				throw new UnsupportedOperationException();
 		}
 
-		return new MultiBitsApproximation<>(Collections.singletonList((T) result));
+		return new MultiBitsApproximation<>(Collections.singletonList(result));
 	}
 
 
@@ -240,19 +237,19 @@ public class ApproximationBuilder<T extends Approximation>
 		switch (tree.getKind()) {
 			case EQUALS:
 				return new MultiBitsApproximation<>(Collections.singletonList(
-						(T) left.get(0).not().xor(right.get(0))));
+						left.get(0).not().xor(right.get(0))));
 			case DISTINCT:
 				return new MultiBitsApproximation<>(Collections.singletonList(
-						(T) left.get(0).xor(right.get(0))));
+						left.get(0).xor(right.get(0))));
 			case IMPLIES:
 				return new MultiBitsApproximation<>(Collections.singletonList(
-						(T) left.get(0).not().xor(right.get(0)).xorM(left.get(0).not().and(right.get(0)))));
+						left.get(0).not().xor(right.get(0)).xorM(left.get(0).not().and(right.get(0)))));
 			case AND:
 				return new MultiBitsApproximation<>(Collections.singletonList(
-						(T) left.get(0).and(right.get(0))));
+						left.get(0).and(right.get(0))));
 			case OR:
 				return new MultiBitsApproximation<>(Collections.singletonList(
-						(T) left.get(0).and(right.get(0)).xorM(left.get(0)).xorM(right.get(0))));
+						left.get(0).and(right.get(0)).xorM(left.get(0)).xorM(right.get(0))));
 			default:
 				throw new UnsupportedOperationException();
 		}
@@ -300,16 +297,14 @@ public class ApproximationBuilder<T extends Approximation>
 				// Implements Peasant Multiplication
 				final int width = left.bitWidth();
 
-				final T zero = this.constBuilder.apply(0);
-
 				// Unrolled first iteration
 				final List<T> temp = new ArrayList<>();
 				final List<T> toAdd = new ArrayList<T>();
 				for (int i = 0; i < width - 1; ++i) {
-					temp.add((T) left.get(i).and(right.get(0)));
+					temp.add(left.get(i).and(right.get(0)));
 					toAdd.add(left.get(i));
 				}
-				temp.add((T) left.get(width - 1).and(right.get(0)));
+				temp.add(left.get(width - 1).and(right.get(0)));
 
 				for (int i = 1; i < width; ++i) {
 					// (right[i] == 1) ==> temp += left << i
@@ -317,12 +312,12 @@ public class ApproximationBuilder<T extends Approximation>
 					// (ite right(i) left 0)
 					final List<T> toAdd2 = new ArrayList<>();
 					for (final T l : toAdd) {
-						toAdd2.add((T) l.and(right.get(i)));
+						toAdd2.add(l.and(right.get(i)));
 					}
 
 					final List<T> tempPlus = add(temp.subList(i, width), toAdd2);
 					for (int j = i; j < width; ++j) {
-						temp.set(j, (T) tempPlus.get(j - i));
+						temp.set(j, tempPlus.get(j - i));
 					}
 					toAdd.remove(toAdd.size() - 1);
 				}
@@ -365,17 +360,17 @@ public class ApproximationBuilder<T extends Approximation>
 					final int cap = 32 - Integer.numberOfLeadingZeros(right.bitWidth() - 1);
 					T capExpr = this.constBuilder.apply(1);
 					for (int j = cap; j < right.bitWidth(); ++j) {
-						capExpr = (T) capExpr.andM(right.get(j).not());
+						capExpr = capExpr.andM(right.get(j).not());
 					}
 
 					for (int i = 0; i < tree.getWidth(); ++i) {
-						Approximation cur = left.get(i).and(eqCnsts.get(0));
+						Approximation<T> cur = left.get(i).and(eqCnsts.get(0));
 
 						for (int j = 1; j <= i; ++j) {
 							cur = cur.xorM(left.get(i - j).and(eqCnsts.get(j)));
 						}
 
-						result.add((T) cur.andM(capExpr));
+						result.add(cur.andM(capExpr));
 					}
 				}
 				return new MultiBitsApproximation<>(result);
@@ -394,11 +389,11 @@ public class ApproximationBuilder<T extends Approximation>
 					final int cap = 32 - Integer.numberOfLeadingZeros(right.bitWidth() - 1);
 					T capExpr = this.constBuilder.apply(1);
 					for (int j = cap; j < right.bitWidth(); ++j) {
-						capExpr = (T) capExpr.andM(right.get(j).not());
+						capExpr = capExpr.andM(right.get(j).not());
 					}
 
 					for (int i = 0; i < tree.getWidth(); ++i) {
-						Approximation cur = left.get(i).and(eqCnsts.get(0));
+						T cur = left.get(i).and(eqCnsts.get(0));
 
 						for (int j = tree.getWidth() - 1; j > 0; --j) {
 							cur = cur.xorM(left.get(Math.min(j + i, left.bitWidth() - 1)).and(eqCnsts.get(j)));
@@ -407,7 +402,7 @@ public class ApproximationBuilder<T extends Approximation>
 						cur = cur.xorM(left.get(left.bitWidth() - 1)).andM(capExpr)
 								.xorM(left.get(left.bitWidth() - 1));
 
-						result.add((T) cur);
+						result.add(cur);
 					}
 				}
 				return new MultiBitsApproximation<>(result);
@@ -426,17 +421,17 @@ public class ApproximationBuilder<T extends Approximation>
 					final int cap = 32 - Integer.numberOfLeadingZeros(right.bitWidth() - 1);
 					T capExpr = this.constBuilder.apply(1);
 					for (int j = cap; j < right.bitWidth(); ++j) {
-						capExpr = (T) capExpr.andM(right.get(j).not());
+						capExpr = capExpr.andM(right.get(j).not());
 					}
 
 					for (int i = 0; i < tree.getWidth(); ++i) {
-						Approximation cur = left.get(i).and(eqCnsts.get(0));
+						Approximation<T> cur = left.get(i).and(eqCnsts.get(0));
 
 						for (int j = tree.getWidth() - 1; j > i; --j) {
 							cur = cur.xorM(left.get(j).and(eqCnsts.get(j - i)));
 						}
 
-						result.add((T) cur.andM(capExpr));
+						result.add(cur.andM(capExpr));
 					}
 				}
 				return new MultiBitsApproximation<>(result);
@@ -489,7 +484,7 @@ public class ApproximationBuilder<T extends Approximation>
 
 		final List<T> result = new ArrayList<>();
 		for (int i = 0; i < tree.getWidth(); ++i) {
-			result.add((T) condRes.get(0).and(thenRes.get(i))
+			result.add(condRes.get(0).and(thenRes.get(i))
 					.xorM(condRes.get(0).not().and(elseRes.get(i))));
 		}
 		return new MultiBitsApproximation<>(result);
@@ -522,14 +517,14 @@ public class ApproximationBuilder<T extends Approximation>
 		final int cap = 32 - Integer.numberOfLeadingZeros(v.bitWidth() - 1);
 
 		final List<T> result = new ArrayList<>();
-		result.add((T) v.get(0).not());
-		result.add((T) v.get(0));
+		result.add(v.get(0).not());
+		result.add(v.get(0));
 
 		for (int i = 1; i < cap; ++i) {
 			final int sz = result.size();
 			for (int j = 0; j < sz; ++j) {
-				result.add((T) result.get(j).and(v.get(i)));
-				result.set(j, (T) result.get(j).andM(v.get(i).not()));
+				result.add(result.get(j).and(v.get(i)));
+				result.set(j, result.get(j).andM(v.get(i).not()));
 			}
 		}
 
@@ -552,36 +547,36 @@ public class ApproximationBuilder<T extends Approximation>
 
 
 
-	private static <T extends Approximation> List<T> add(final List<T> left, final List<T> right) {
+	private static <T extends Approximation<T>> List<T> add(final List<T> left, final List<T> right) {
 		final List<T> result = new ArrayList<>();
-		result.add((T) left.get(0).xor(right.get(0)));
+		result.add(left.get(0).xor(right.get(0)));
 
-		T carry = (T) left.get(0).and(right.get(0));
+		T carry = left.get(0).and(right.get(0));
 		for (final Iterator<T> lit = left.listIterator(1), rit = right.listIterator(1);
 				lit.hasNext() && rit.hasNext(); ) {
 			final T l = lit.next();
 			final T r = rit.next();
-			final T t = (T) l.xor(r);
-			result.add((T) t.xor(carry));
-			carry = (T) carry.xorM(r).andM(t).xorM(r);
+			final T t = l.xor(r);
+			result.add(t.xor(carry));
+			carry = carry.xorM(r).andM(t).xorM(r);
 		}
 		return result;
 	}
 
 
 
-	private static <T extends Approximation> List<T> sub(final List<T> left, final List<T> right) {
+	private static <T extends Approximation<T>> List<T> sub(final List<T> left, final List<T> right) {
 		final List<T> result = new ArrayList<>();
-		result.add((T) left.get(0).xor(right.get(0)));
+		result.add(left.get(0).xor(right.get(0)));
 
-		T borrow = (T) left.get(0).not().and(right.get(0));
+		T borrow = left.get(0).not().and(right.get(0));
 		for (final Iterator<T> lit = left.listIterator(1), rit = right.listIterator(1);
 				lit.hasNext() && rit.hasNext(); ) {
 			final T l = lit.next();
 			final T r = rit.next();
-			final T t = (T) l.xor(r);
-			result.add((T) t.xor(borrow));
-			borrow = (T) t.andM(r.xor(borrow)).xorM(borrow);
+			final T t = l.xor(r);
+			result.add(t.xor(borrow));
+			borrow = t.andM(r.xor(borrow)).xorM(borrow);
 		}
 		return result;
 	}
@@ -590,34 +585,23 @@ public class ApproximationBuilder<T extends Approximation>
 
 	private List<T> inc(final List<T> operand) {
 		final List<T> result = new ArrayList<>();
-		result.add((T) operand.get(0).not());
+		result.add(operand.get(0).not());
 
 		T carry = operand.get(0);
 		for (final Iterator<T> it = operand.listIterator(1); it.hasNext(); ) {
 			final T o = it.next();
-			result.add((T) o.xor(carry));
-			carry = (T) carry.and(o);
+			result.add(o.xor(carry));
+			carry = carry.and(o);
 		}
 		return result;
 	}
 
 
 
-	private List<T> dec(final List<T> operand) {
-		final List<T> right = new ArrayList<>();
-		right.add(this.constBuilder.apply(1));
-		for (int i = 1; i < operand.size(); ++i) {
-			right.add(this.constBuilder.apply(0));
-		}
-		return sub(operand, right);
-	}
-
-
-
-	private static <T extends Approximation> List<T> not(final List<T> operand) {
+	private static <T extends Approximation<T>> List<T> not(final List<T> operand) {
 		final List<T> result = new ArrayList<>();
-		for (final Iterator<T> it = operand.iterator(); it.hasNext(); ) {
-			result.add((T) it.next().not());
+		for (final T next :  operand) {
+			result.add(next.not());
 		}
 		return result;
 	}
@@ -645,9 +629,9 @@ public class ApproximationBuilder<T extends Approximation>
 
 		final List<T> posXorNegFilledDivisor = neg(filledDivisor);
 		// Unroll first iteration to allow modifying operations in loop
-		posXorNegFilledDivisor.set(0, (T) posXorNegFilledDivisor.get(0).xor(filledDivisor.get(0)));
+		posXorNegFilledDivisor.set(0, posXorNegFilledDivisor.get(0).xor(filledDivisor.get(0)));
 		for (int i = 1; i < posXorNegFilledDivisor.size(); ++i) {
-			posXorNegFilledDivisor.set(i, (T) posXorNegFilledDivisor.get(i).xorM(filledDivisor.get(i)));
+			posXorNegFilledDivisor.set(i, posXorNegFilledDivisor.get(i).xorM(filledDivisor.get(i)));
 		}
 
 		final LinkedList<T> quotient = new LinkedList<>(dividend);
@@ -656,16 +640,16 @@ public class ApproximationBuilder<T extends Approximation>
 		// Unroll first iteration because sign bit of remainder is always 0
 
 		T borrow = quotient.removeLast();
-		remainder.add((T) borrow.xor(divisor.get(0)));
-		borrow = (T) borrow.not().and(divisor.get(0));
+		remainder.add(borrow.xor(divisor.get(0)));
+		borrow = borrow.not().and(divisor.get(0));
 		for (int i = 1; i < n; ++i) {
-			final T bit = (T) borrow.xor(divisor.get(i));
+			final T bit = borrow.xor(divisor.get(i));
 			remainder.add(bit);
-			borrow = (T) borrow.xorM(divisor.get(i).and(bit));
+			borrow = borrow.xorM(divisor.get(i).and(bit));
 		}
 		remainder.add(borrow);
 
-		quotient.addFirst((T) borrow.not());
+		quotient.addFirst(borrow.not());
 
 		for (int i = 1; i < n; ++i) {
 			final T sign = remainder.get(remainder.size() - 1);
@@ -675,13 +659,13 @@ public class ApproximationBuilder<T extends Approximation>
 			// (ite sign negFilledDivisor filledDivisor)
 			final List<T> subtrahend = new ArrayList<>();
 			for (int j = 0; j < filledDivisor.size() - 1; ++j) {
-				subtrahend.add((T) posXorNegFilledDivisor.get(j).and(sign).xorM(filledDivisor.get(j)));
+				subtrahend.add(posXorNegFilledDivisor.get(j).and(sign).xorM(filledDivisor.get(j)));
 			}
 			subtrahend.add(sign);
 
 			remainder = sub(remainder, subtrahend);
 
-			quotient.addFirst((T) remainder.get(remainder.size() - 1).not());
+			quotient.addFirst(remainder.get(remainder.size() - 1).not());
 		}
 
 		{
@@ -690,11 +674,11 @@ public class ApproximationBuilder<T extends Approximation>
 
 			// remainder = sign * oneRem ^ !sign * remainder
 			for (int j = 0; j < n; ++j) {
-				remainder.set(j, (T) oneRem.get(j).andM(sign).xorM(remainder.get(j).andM(sign.not())));
+				remainder.set(j, oneRem.get(j).andM(sign).xorM(remainder.get(j).andM(sign.not())));
 			}
 		}
 
-		return new Pair(quotient, remainder);
+		return new Pair<>(quotient, remainder);
 	}
 
 
@@ -706,14 +690,14 @@ public class ApproximationBuilder<T extends Approximation>
 		final T signN = dividend.get(dividend.size() - 1);
 		final T signD = divisor.get(divisor.size() - 1);
 
-		final T notSignN = (T) signN.not();
-		final T notSignD = (T) signD.not();
+		final T notSignN = signN.not();
+		final T notSignD = signD.not();
 
 		// Select dividend or negated dividend based on sign bit
 		final List<T> prepDividend = new ArrayList<>();
 		for (int i = 0; i < dividend.size(); ++i) {
 			// (ite notSignN negDividend(i) dividend(i))
-			prepDividend.add((T) dividend.get(i)
+			prepDividend.add(dividend.get(i)
 					.xor(negDividend.get(i)).andM(notSignN).xorM(negDividend.get(i)));
 		}
 
@@ -721,7 +705,7 @@ public class ApproximationBuilder<T extends Approximation>
 		final List<T> prepDivisor = new ArrayList<>();
 		for (int i = 0; i < divisor.size(); ++i) {
 			// (ite notSignD negDivisor(i) divisor(i))
-			prepDivisor.add((T) divisor.get(i)
+			prepDivisor.add(divisor.get(i)
 					.xor(negDivisor.get(i)).andM(notSignD).xorM(negDivisor.get(i)));
 		}
 
@@ -734,25 +718,25 @@ public class ApproximationBuilder<T extends Approximation>
 		final List<T> srem = new ArrayList<>();
 
 		// Select result based on sign
-		final T factor1 = (T) notSignD.xor(signN);
-		final T factor2 = (T) signD.xor(signN);
+		final T factor1 = notSignD.xor(signN);
+		final T factor2 = signD.xor(signN);
 
 		// Unroll first iteration to allow modifying operations in loop
 		// (ite (= signN signD) ures(1)(0) negUQuot(0))
-		squot.add((T) factor1.and(ures.getFirst().get(0))
+		squot.add(factor1.and(ures.getFirst().get(0))
 				.xorM(factor2.and(negUQuot.get(0))));
 
 		// (ite signN negURem(0) ures(2)(0))
-		srem.add((T) ures.getSecond().get(0)
+		srem.add(ures.getSecond().get(0)
 				.xor(negURem.get(0)).andM(signN).xorM(ures.getSecond().get(0)));
 
 		for (int i = 1; i < negUQuot.size(); ++i) {
 			// (ite (= signN signD) ures(1)(i) negUQuot(i))
-			squot.add((T) ures.getFirst().get(i).andM(factor1)
+			squot.add(ures.getFirst().get(i).andM(factor1)
 					.xorM(negUQuot.get(i).andM(factor2)));
 
 			// (ite signN negURem(i) ures(2)(i))
-			srem.add((T) negURem.get(i)
+			srem.add(negURem.get(i)
 					.xorM(ures.getSecond().get(i)).andM(signN).xorM(ures.getSecond().get(i)));
 		}
 
@@ -768,22 +752,22 @@ public class ApproximationBuilder<T extends Approximation>
 		final T signN = dividend.get(dividend.size() - 1);
 		final T signD = divisor.get(divisor.size() - 1);
 
-		final T notSignN = (T) signN.not();
-		final T notSignD = (T) signD.not();
+		final T notSignN = signN.not();
+		final T notSignD = signD.not();
 
 		final Pair<List<T>, List<T>> res00 = unsignedDivide(dividend, divisor);
 		final Pair<List<T>, List<T>> res01 = unsignedDivide(dividend, negDivisor);
 		final Pair<List<T>, List<T>> res10 = unsignedDivide(negDividend, divisor);
 		final Pair<List<T>, List<T>> res11 = unsignedDivide(negDividend, negDivisor);
 
-		T rem01Zero = (T) res01.getSecond().get(0).not();
+		T rem01Zero = res01.getSecond().get(0).not();
 		for (int i = 1; i < divisor.size(); ++i) {
-			rem01Zero = (T) rem01Zero.and(res01.getSecond().get(i).not());
+			rem01Zero = rem01Zero.and(res01.getSecond().get(i).not());
 		}
 
-		T rem10Zero = (T) res10.getSecond().get(0).not();
+		T rem10Zero = res10.getSecond().get(0).not();
 		for (int i = 1; i < divisor.size(); ++i) {
-			rem10Zero = (T) rem10Zero.and(res10.getSecond().get(i).not());
+			rem10Zero = rem10Zero.and(res10.getSecond().get(i).not());
 		}
 
 		final List<T> sRem01 = add(divisor, res01.getSecond());
@@ -810,10 +794,10 @@ public class ApproximationBuilder<T extends Approximation>
 
 
 
-	private Approximation distinct(final List<T> left, final List<T> right) {
-		Approximation result = left.get(0).xor(right.get(0));
+	private T distinct(final List<T> left, final List<T> right) {
+		T result = left.get(0).xor(right.get(0));
 		for (int i = 1; i < left.size(); ++i) {
-			final Approximation curDis = left.get(i).xor(right.get(i));
+			final T curDis = left.get(i).xor(right.get(i));
 			result = result.xor(curDis).xorM(result.and(curDis));
 		}
 		return result;
@@ -821,8 +805,8 @@ public class ApproximationBuilder<T extends Approximation>
 
 
 
-	private Approximation unsignedLessThan(final List<T> left, final List<T> right) {
-		Approximation result = left.get(0).not().and(right.get(0));
+	private T unsignedLessThan(final List<T> left, final List<T> right) {
+		T result = left.get(0).not().and(right.get(0));
 		for (int i = 1; i < left.size(); ++i) {
 			result = right.get(i).xor(result).andM(left.get(i).xor(result)).xorM(right.get(i));
 		}
@@ -831,8 +815,8 @@ public class ApproximationBuilder<T extends Approximation>
 
 
 
-	private Approximation unsignedLessEquals(final List<T> left, final List<T> right) {
-		Approximation result = left.get(0).not().xor(right.get(0));
+	private T unsignedLessEquals(final List<T> left, final List<T> right) {
+		T result = left.get(0).not().xor(right.get(0));
 		for (int i = 1; i < left.size(); ++i) {
 			result = result.andM(left.get(i).not().xor(right.get(i)));
 		}
@@ -841,8 +825,8 @@ public class ApproximationBuilder<T extends Approximation>
 
 
 
-	private Approximation signedLessThan(final List<T> left, final List<T> right) {
-		Approximation result = left.get(0).not().and(right.get(0));
+	private T signedLessThan(final List<T> left, final List<T> right) {
+		T result = left.get(0).not().and(right.get(0));
 		for (int i = 1; i < left.size() - 1; ++i) {
 			result = right.get(i).xor(result).andM(left.get(i).xor(result)).xorM(right.get(i));
 		}
@@ -854,8 +838,8 @@ public class ApproximationBuilder<T extends Approximation>
 
 
 
-	private Approximation signedLessEquals(final List<T> left, final List<T> right) {
-		Approximation result = left.get(0).not().xor(right.get(0));
+	private T signedLessEquals(final List<T> left, final List<T> right) {
+		T result = left.get(0).not().xor(right.get(0));
 		for (int i = 1; i < left.size(); ++i) {
 			result = result.andM(left.get(i).not().xor(right.get(i)));
 		}

@@ -25,7 +25,8 @@ import java.util.Objects;
 
 
 
-public final class MultiBitsApproximation<T extends Approximation> implements Approximation {
+public final class MultiBitsApproximation<T extends Approximation<T>>
+		implements Approximation<MultiBitsApproximation<T>> {
 
 	private List<T> bitApproximations;
 
@@ -56,17 +57,16 @@ public final class MultiBitsApproximation<T extends Approximation> implements Ap
 
 
 	@Override
-	public Approximation and(final Approximation other) {
-		final MultiBitsApproximation<T> otherMulti = (MultiBitsApproximation<T>) other;
+	public MultiBitsApproximation<T> and(final MultiBitsApproximation<T> other) {
 		final int width = this.bitWidth();
 
-		if (width != otherMulti.bitWidth()) {
+		if (width != other.bitWidth()) {
 			throw new IllegalArgumentException("Bit widths do not match");
 		}
 
 		final List<T> result = new ArrayList<>(width);
 		for (int i = 0; i < width; ++i) {
-			result.add((T) this.bitApproximations.get(i).and(otherMulti.bitApproximations.get(i)));
+			result.add((T) this.bitApproximations.get(i).and(other.bitApproximations.get(i)));
 		}
 
 		return new MultiBitsApproximation<>(result);
@@ -75,16 +75,15 @@ public final class MultiBitsApproximation<T extends Approximation> implements Ap
 
 
 	@Override
-	public Approximation andM(final Approximation other) {
-		final MultiBitsApproximation<T> otherMulti = (MultiBitsApproximation<T>) other;
+	public MultiBitsApproximation<T> andM(final MultiBitsApproximation<T> other) {
 		final int width = this.bitWidth();
 
-		if (width != otherMulti.bitWidth()) {
+		if (width != other.bitWidth()) {
 			throw new IllegalArgumentException("Bit widths do not match");
 		}
 
 		for (int i = 0; i < width; ++i) {
-			this.bitApproximations.get(i).andM(otherMulti.bitApproximations.get(i));
+			this.bitApproximations.get(i).andM(other.bitApproximations.get(i));
 		}
 
 		return this;
@@ -93,17 +92,16 @@ public final class MultiBitsApproximation<T extends Approximation> implements Ap
 
 
 	@Override
-	public Approximation xor(final Approximation other) {
-		final MultiBitsApproximation<T> otherMulti = (MultiBitsApproximation<T>) other;
+	public MultiBitsApproximation<T> xor(final MultiBitsApproximation<T> other) {
 		final int width = this.bitWidth();
 
-		if (width != otherMulti.bitWidth()) {
+		if (width != other.bitWidth()) {
 			throw new IllegalArgumentException("Bit widths do not match");
 		}
 
 		final List<T> result = new ArrayList<>(width);
 		for (int i = 0; i < width; ++i) {
-			result.add((T) this.bitApproximations.get(i).xor(otherMulti.bitApproximations.get(i)));
+			result.add((T) this.bitApproximations.get(i).xor(other.bitApproximations.get(i)));
 		}
 
 		return new MultiBitsApproximation<>(result);
@@ -112,16 +110,15 @@ public final class MultiBitsApproximation<T extends Approximation> implements Ap
 
 
 	@Override
-	public Approximation xorM(final Approximation other) {
-		final MultiBitsApproximation<T> otherMulti = (MultiBitsApproximation<T>) other;
+	public MultiBitsApproximation<T> xorM(final MultiBitsApproximation<T> other) {
 		final int width = this.bitWidth();
 
-		if (width != otherMulti.bitWidth()) {
+		if (width != other.bitWidth()) {
 			throw new IllegalArgumentException("Bit widths do not match");
 		}
 
 		for (int i = 0; i < width; ++i) {
-			this.bitApproximations.get(i).xorM(otherMulti.bitApproximations.get(i));
+			this.bitApproximations.get(i).xorM(other.bitApproximations.get(i));
 		}
 
 		return this;
@@ -130,7 +127,7 @@ public final class MultiBitsApproximation<T extends Approximation> implements Ap
 
 
 	@Override
-	public Approximation not() {
+	public MultiBitsApproximation<T> not() {
 		final int width = this.bitWidth();
 
 		final List<T> result = new ArrayList<>(width);
@@ -144,7 +141,7 @@ public final class MultiBitsApproximation<T extends Approximation> implements Ap
 
 
 	@Override
-	public Approximation notM() {
+	public MultiBitsApproximation<T> notM() {
 		final int width = this.bitWidth();
 
 		for (int i = 0; i < width; ++i) {
@@ -157,17 +154,16 @@ public final class MultiBitsApproximation<T extends Approximation> implements Ap
 
 
 	@Override
-	public Approximation join(final Approximation other) {
-		final MultiBitsApproximation<T> otherMulti = (MultiBitsApproximation<T>) other;
+	public MultiBitsApproximation<T> join(final MultiBitsApproximation<T> other) {
 		final int width = this.bitWidth();
 
-		if (width != otherMulti.bitWidth()) {
+		if (width != other.bitWidth()) {
 			throw new IllegalArgumentException("Bit widths do not match");
 		}
 
 		final List<T> result = new ArrayList<>(width);
 		for (int i = 0; i < width; ++i) {
-			result.add((T) this.bitApproximations.get(i).join(otherMulti.bitApproximations.get(i)));
+			result.add((T) this.bitApproximations.get(i).join(other.bitApproximations.get(i)));
 		}
 
 		return new MultiBitsApproximation<>(result);

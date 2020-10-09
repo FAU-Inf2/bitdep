@@ -21,7 +21,6 @@ package analysis.essential;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -43,7 +42,8 @@ import smt.VarReplacer;
  * An underapproximation of the set of essential bits. This approximation uses
  * a linear Zhegalkin polynomial.
  */
-public final class ZPolyUnderApproximation implements Approximation, Iterable<Integer>, BitContainer {
+public final class ZPolyUnderApproximation
+		implements Approximation<ZPolyUnderApproximation>, Iterable<Integer>, BitContainer {
 
 	/**
 	 * Indicates whether the Zhegalkin polynomial contains a single '1'.
@@ -229,48 +229,44 @@ public final class ZPolyUnderApproximation implements Approximation, Iterable<In
 
 
 	@Override
-	public Approximation and(final Approximation other) {
-		final ZPolyUnderApproximation otherZPoly = (ZPolyUnderApproximation) other;
-
+	public ZPolyUnderApproximation and(final ZPolyUnderApproximation other) {
 		// f * g ~~> (N(f) & N(g), (V(f) & V(g)) ^ (N(f) ? V(g) : {}) ^ (N(g) ? V(f) : {}))
 
 		final long[] newMonomials = Arrays.copyOf(this.monomials,
-				Math.max(this.monomials.length, otherZPoly.monomials.length));
-		monomialsAnd(newMonomials, otherZPoly.monomials);
+				Math.max(this.monomials.length, other.monomials.length));
+		monomialsAnd(newMonomials, other.monomials);
 
 		if (this.containsOne) {
-			monomialsXor(newMonomials, otherZPoly.monomials);
+			monomialsXor(newMonomials, other.monomials);
 		}
-		if (otherZPoly.containsOne) {
+		if (other.containsOne) {
 			monomialsXor(newMonomials, this.monomials);
 		}
 
-		return new ZPolyUnderApproximation(this.containsOne & otherZPoly.containsOne, newMonomials);
+		return new ZPolyUnderApproximation(this.containsOne & other.containsOne, newMonomials);
 	}
 
 
 
 	@Override
-	public Approximation andM(final Approximation other) {
-		final ZPolyUnderApproximation otherZPoly = (ZPolyUnderApproximation) other;
-
-		if (this.monomials.length < otherZPoly.monomials.length) {
-			this.monomials = Arrays.copyOf(this.monomials, otherZPoly.monomials.length);
+	public ZPolyUnderApproximation andM(final ZPolyUnderApproximation other) {
+		if (this.monomials.length < other.monomials.length) {
+			this.monomials = Arrays.copyOf(this.monomials, other.monomials.length);
 		}
 
 		// f * g ~~> (N(f) & N(g), (V(f) & V(g)) ^ (N(f) ? V(g) : {}) ^ (N(g) ? V(f) : {}))
 
-		if (otherZPoly.containsOne) {
+		if (other.containsOne) {
 			// (x & y) ^ x = x \ y
-			monomialsAndn(this.monomials, otherZPoly.monomials);
+			monomialsAndn(this.monomials, other.monomials);
 		} else {
-			monomialsAnd(this.monomials, otherZPoly.monomials);
+			monomialsAnd(this.monomials, other.monomials);
 		}
 		if (this.containsOne) {
-			monomialsXor(this.monomials, otherZPoly.monomials);
+			monomialsXor(this.monomials, other.monomials);
 		}
 
-		this.containsOne = this.containsOne & otherZPoly.containsOne;
+		this.containsOne = this.containsOne & other.containsOne;
 
 		return this;
 	}
@@ -278,30 +274,26 @@ public final class ZPolyUnderApproximation implements Approximation, Iterable<In
 
 
 	@Override
-	public Approximation xor(final Approximation other) {
-		final ZPolyUnderApproximation otherZPoly = (ZPolyUnderApproximation) other;
-
+	public ZPolyUnderApproximation xor(final ZPolyUnderApproximation other) {
 		// f + g ~~> (N(f) ^ N(g), V(f) ^ V(g))
 		final long[] newMonomials = Arrays.copyOf(this.monomials,
-				Math.max(this.monomials.length, otherZPoly.monomials.length));
-		monomialsXor(newMonomials, otherZPoly.monomials);
+				Math.max(this.monomials.length, other.monomials.length));
+		monomialsXor(newMonomials, other.monomials);
 
-		return new ZPolyUnderApproximation(this.containsOne != otherZPoly.containsOne, newMonomials);
+		return new ZPolyUnderApproximation(this.containsOne != other.containsOne, newMonomials);
 	}
 
 
 
 	@Override
-	public Approximation xorM(final Approximation other) {
-		final ZPolyUnderApproximation otherZPoly = (ZPolyUnderApproximation) other;
-
-		if (this.monomials.length < otherZPoly.monomials.length) {
-			this.monomials = Arrays.copyOf(this.monomials, otherZPoly.monomials.length);
+	public ZPolyUnderApproximation xorM(final ZPolyUnderApproximation other) {
+		if (this.monomials.length < other.monomials.length) {
+			this.monomials = Arrays.copyOf(this.monomials, other.monomials.length);
 		}
 
 		// f + g ~~> (N(f) ^ N(g), V(f) ^ V(g))
-		this.containsOne = this.containsOne != otherZPoly.containsOne;
-		monomialsXor(this.monomials, otherZPoly.monomials);
+		this.containsOne = this.containsOne != other.containsOne;
+		monomialsXor(this.monomials, other.monomials);
 
 		return this;
 	}
@@ -309,7 +301,7 @@ public final class ZPolyUnderApproximation implements Approximation, Iterable<In
 
 
 	@Override
-	public Approximation not() {
+	public ZPolyUnderApproximation not() {
 		// this.monomials is never changed, so we can just pass it to the
 		// constructor
 		return new ZPolyUnderApproximation(!this.containsOne, this.monomials);
@@ -318,7 +310,7 @@ public final class ZPolyUnderApproximation implements Approximation, Iterable<In
 
 
 	@Override
-	public Approximation notM() {
+	public ZPolyUnderApproximation notM() {
 		this.containsOne = !this.containsOne;
 		return this;
 	}
@@ -326,15 +318,13 @@ public final class ZPolyUnderApproximation implements Approximation, Iterable<In
 
 
 	@Override
-	public Approximation join(final Approximation other) {
-		final ZPolyUnderApproximation otherZPoly = (ZPolyUnderApproximation) other;
-
+	public ZPolyUnderApproximation join(final ZPolyUnderApproximation other) {
 		// (N(f) | N(g), V(f) | V(g))
 		final long[] newMonomials = Arrays.copyOf(this.monomials,
-				Math.max(this.monomials.length, otherZPoly.monomials.length));
-		monomialsXor(newMonomials, otherZPoly.monomials); // Dummy
+				Math.max(this.monomials.length, other.monomials.length));
+		monomialsXor(newMonomials, other.monomials); // Dummy
 
-		return new ZPolyUnderApproximation(this.containsOne || otherZPoly.containsOne, newMonomials);
+		return new ZPolyUnderApproximation(this.containsOne || other.containsOne, newMonomials);
 	}
 
 

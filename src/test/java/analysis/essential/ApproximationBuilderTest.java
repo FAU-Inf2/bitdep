@@ -22,7 +22,7 @@ import smt.BVAst;
 @RunWith(DataProviderRunner.class)
 public class ApproximationBuilderTest {
 
-	private static class PseudoApproximation implements Approximation {
+	private static class PseudoApproximation implements Approximation<PseudoApproximation> {
 		private boolean value;
 
 		PseudoApproximation(final boolean value) {
@@ -30,44 +30,40 @@ public class ApproximationBuilderTest {
 		}
 
 		@Override
-		public Approximation and(final Approximation other) {
-			final PseudoApproximation otherPseudo = (PseudoApproximation) other;
-			return new PseudoApproximation(this.value & otherPseudo.value);
+		public PseudoApproximation and(final PseudoApproximation other) {
+			return new PseudoApproximation(this.value & other.value);
 		}
 
 		@Override
-		public Approximation andM(final Approximation other) {
-			final PseudoApproximation otherPseudo = (PseudoApproximation) other;
-			this.value &= otherPseudo.value;;
+		public PseudoApproximation andM(final PseudoApproximation other) {
+			this.value &= other.value;
 			return this;
 		}
 
 		@Override
-		public Approximation xor(final Approximation other) {
-			final PseudoApproximation otherPseudo = (PseudoApproximation) other;
-			return new PseudoApproximation(this.value != otherPseudo.value);
+		public PseudoApproximation xor(final PseudoApproximation other) {
+			return new PseudoApproximation(this.value != other.value);
 		}
 
 		@Override
-		public Approximation xorM(final Approximation other) {
-			final PseudoApproximation otherPseudo = (PseudoApproximation) other;
-			this.value = this.value != otherPseudo.value;
+		public PseudoApproximation xorM(final PseudoApproximation other) {
+			this.value = this.value != other.value;
 			return this;
 		}
 
 		@Override
-		public Approximation not() {
+		public PseudoApproximation not() {
 			return new PseudoApproximation(!this.value);
 		}
 
 		@Override
-		public Approximation notM() {
+		public PseudoApproximation notM() {
 			this.value = !this.value;
 			return this;
 		}
 
 		@Override
-		public Approximation join(final Approximation other) {
+		public PseudoApproximation join(final PseudoApproximation other) {
 			throw new UnsupportedOperationException();
 		}
 

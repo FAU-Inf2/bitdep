@@ -22,6 +22,7 @@ package synth;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -33,6 +34,7 @@ import java.util.function.Function;
 
 import static smt.Builder.*;
 
+import smt.BitVector;
 import smt.BoolAst;
 import smt.Builder;
 import smt.BVAst;
@@ -333,17 +335,17 @@ public class FunctionParser {
 			idx[0] += 1;
 
 			try {
-				final long value;
+				final BigInteger value;
 				if (splitted[0].startsWith("0x")) {
-					value = Long.parseLong(splitted[0].substring(2), 16);
+					value = new BigInteger(splitted[0].substring(2), 16);
 				} else if (splitted[0].startsWith("0b")) {
-					value = Long.parseLong(splitted[0].substring(2), 2);
+					value = new BigInteger(splitted[0].substring(2), 2);
 				} else {
-					value = Long.parseLong(splitted[0]);
+					value = new BigInteger(splitted[0]);
 				}
 				final int width = Integer.parseInt(splitted[1]);
 
-				return mkBVConst(width, value);
+				return mkBVConst(new BitVector(width, value));
 			} catch (final Exception e) {
 				throw new IllegalArgumentException("parse error", e);
 			}

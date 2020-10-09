@@ -40,7 +40,7 @@ public class Evaluation {
 			final Set<Integer> current = new HashSet<>();
 			for (int v = 0, c = 0; v < inputs.size(); ++v) {
 				for (int i = 0; i < inputs.get(v).getWidth(); ++i, ++c) {
-					final List<BVAst> copy = new ArrayList(inputs);
+					final List<BVAst> copy = new ArrayList<>(inputs);
 					copy.set(v, Builder.mkXor(inputs.get(v),
 							Builder.mkBVConst(inputs.get(v).getWidth(), 1L << i)));
 					final YicesSolver solver = new YicesSolver(false);

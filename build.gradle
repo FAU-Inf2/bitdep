@@ -1,8 +1,15 @@
 apply plugin: "java"
 apply plugin: "c"
 
-def JNI_INCLUDE_DIR = System.properties["java.home"] + "/../include"
-def JNI_LIB_DIR = System.properties["java.home"] + "/../lib"
+// Find JNI directories
+def JNI_BASE_DIR
+if (new File(System.properties["java.home"], "include").exists()) {
+	JNI_BASE_DIR = System.properties["java.home"]
+} else {
+	JNI_BASE_DIR = System.properties["java.home"] + "/.."
+}
+def JNI_INCLUDE_DIR = JNI_BASE_DIR + "/include"
+def JNI_LIB_DIR = JNI_BASE_DIR + "/lib"
 
 println "Found JNI include directory: " + JNI_INCLUDE_DIR
 
@@ -11,10 +18,10 @@ repositories {
 }
 
 dependencies {
-	compile group: 'com.google.guava', name: 'guava', version: '25.1-jre'
+	implementation group: 'com.google.guava', name: 'guava', version: '25.1-jre'
 
-	testCompile group: 'junit', name: 'junit', version: '4.+'
-	testCompile group: 'com.tngtech.java', name: 'junit-dataprovider', version: '1.10+'
+	testImplementation group: 'junit', name: 'junit', version: '4.+'
+	testImplementation group: 'com.tngtech.java', name: 'junit-dataprovider', version: '1.10+'
 }
 
 model {
@@ -75,11 +82,16 @@ sourceSets {
 }
 
 configurations {
-	testDataCompile.extendsFrom compile
+	testDataCompile.extendsFrom implementation
 	testDataRuntime.extendsFrom runtime
 
-	testCompile.extendsFrom testDataCompile
+	testImplementation.extendsFrom testDataCompile
 	testRuntime.extendsFrom testDataRuntime
+}
+
+tasks.withType(JavaCompile) {
+	options.compilerArgs << '-Xlint:unchecked'
+	options.deprecation = true
 }
 
 test {
@@ -87,26 +99,27 @@ test {
 	systemProperty "java.library.path", "libs:build/libs/yicesjni/shared"
 }
 
+classes.dependsOn 'yicesjniSharedLibrary'
+
 // Task to run the synthesizer shell
-task synthShell(description: "Runs a shell for the synthesizer") << {
-	def classpath = sourceSets.main.runtimeClasspath
+task synthShell(description: "Runs a shell for the synthesizer", type: JavaExec) {
+	doFirst {
+		if (gradle.startParameter.consoleOutput != ConsoleOutput.Plain) {
+			throw new GradleScriptException("synthShell requires --console=plain", null)
+		}
+	}
 
-	def command = [
-		"java",
-		"-cp", classpath.collect().join(System.getProperty("path.separator")),
-		"synth.SynthesizerShell"
-	]
+	classpath = sourceSets.main.runtimeClasspath
 
-	def procBuilder = new ProcessBuilder(command)
-			.redirectOutput(ProcessBuilder.Redirect.INHERIT)
-			.redirectInput(ProcessBuilder.Redirect.INHERIT)
-			.redirectError(ProcessBuilder.Redirect.INHERIT)
+	jvmArgs "-ea"
 
-	procBuilder.environment().put("LD_LIBRARY_PATH", "libs:build/libs/yicesjni/shared")
+	main "synth.SynthesizerShell"
 
-	procBuilder.start().waitFor();
+	environment.put("LD_LIBRARY_PATH", "libs:build/libs/yicesjni/shared")
+
+	standardInput = System.in
+	standardOutput = System.out
 }
 synthShell.dependsOn 'classes'
-synthShell.dependsOn 'yicesjniSharedLibrary'
 
 build.dependsOn 'jar'
