@@ -1,0 +1,64 @@
+**Note:** This document makes extensive use of Unicode symbols for mathematical
+notation. Please make sure that your used font supports all these symbols. If
+not, use a different font (like DejaVu Sans Mono).
+
+The proofs use the notation from the paper, so you should read the paper before
+attempting to understand the proofs.
+
+
+**Proof of Lemma 3:**
+We have ν(P) = |L(P)| - max_(K⊆L(P)) (|K| - |N(K)|) for bipartite matching
+problems with neighbors N(K) of K [LP86]. Let K be a set of leaves such that
+|K| - |N(K)| is maximum and X is the set of shapes of the leaves in K. As a
+leaf can be matched to all variables of at most the same shape, N(K) = V(↓X).
+If there is a leaf x ∉ K of a shape in ↓X, |K ∪ {x}| - |V(↓X)| > |K| - |V(↓X)|,
+contradicting our choice of K. Hence, K = L(P, ↓X). ∎
+
+
+**Proof of Lemma 4:**
+We prove the contrapositive. Suppose ν(T) < ν(P). By Lemma 3, there is a set X
+with |L(P, ↓X)| - |V(↓X)| < |L(T, ↓X)| - |V(↓X)|. Choose X such that X = ↓X.
+Then |L(P, X)| < |L(T, X)|. Since |L(P)| = |L(T)|, |\L(P, X̅)| > |L(T, X̅)|$. As
+X = ↓X, X̅ = ↑X̅$. Thus, |{ y ∈ L(P) | y ∈ ↑X̅ }| > |{ y ∈ L(T) | y ∈ ↑X̅ }|, which
+implies |δ(P, T, ↑X̅)| > |δ(T, P, ↑X̅)|. ∎
+
+
+**Proof of Lemma 5:**
+Let the bipartite graph (A, B, E) have partitions A = L(R + γ₁) \ L(R + γ₂) and
+B = L(R + γ₂) \ L(R + γ₁) and edges E between a ∈ A and b ∈ B if a ≤ b. As
+|δ(R + γ₁, R + γ₂, ↑X)| ≤ |δ(R + γ₂, R + γ₁, ↑X)| also holds for arbitrary
+subsets of L(R + γ₁), by Hall's Marriage Theorem (A, B, E) has a matching of
+all a ∈ A. Since γ₁ and γ₂ comprise the same operations, the subtrees connected
+to arg-edges of R + γ₁ may instead be connected to the matched leaf arg-edges
+of R + γ₂. Since a matched leaf from B has at least the same shape as its
+counterpart in A, the resulting program Pʹ satisfies ν(Pʹ) ≥ \ν(P) by Lemma 4. ∎
+
+
+**Proof of Lemma 6:**
+Let s be the shape of the leaf l of S₁. As PS_P(aᵢ) = 𝄍, all leaf shapes of S₁
+(excluding s) are still present in T1(P, a). For each remaining leaf shape t,
+T1(P, a) has a leaf shape s ⊔ t ≥ t. By Lemma 4, ν(T1(P, aᵢ)) ≥ ν(P). ∎
+
+
+**Proof of Lemma 7:**
+Compared with P, T2(P, a₁, aⱼ) contains all but one leaf shapes from S₁ because
+PS_P(a₁) = PS_P(aⱼ). Since all arg-edges of S₁ have a shape of at least
+PS_P(a₁), each leaf of S₂ (including a leaf for aⱼ) is at least as large in
+T2(P, a₁, aⱼ) as in P. Thus, by Lemma 4, ν(T2(P, a₁, aⱼ)) ≥ ν(P). ∎
+
+
+**Proof of Lemma 8:**
+Let T = T3(P, a₁, a₂, a₃). Because of premise (b), PS_P(a₂) = PS_T(a₂) and
+PS_P(a₃) = PS_T(a₃); see Fig. 10.
+
+Since PS_P(a₁) = PS_T(a₂) by premise (c), S₁ contributes the same leaf shapes
+in P and T. Moreover, since PS_P(a₃) = PS_T(a₁) by premises (a) and (c), S₃
+also contributes the same leaf shapes in P and T. Since PS_P(a₂) ≤ PS_T(a₃) by
+premise (a), each leaf contributed by S₂ is at least as large in T as it is in
+P. Thus, by Lemma 4, ν(T) ≥ ν(P). ∎
+
+
+**References**
+
+[LP86] Lovász, László and Plummer, Michael D.: Matching Theory. Elsevier,
+       Amsterdam, The Netherlands (1986).

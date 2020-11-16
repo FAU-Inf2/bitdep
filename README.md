@@ -8,7 +8,8 @@ Verification, Model Checking, and Abstract Interpretation (VMCAI 2021),
 Copenhagen, Denmark. 2021
 
 The repository holds a reference implementation of the described approximations
-and algorithms.
+and algorithms. Furthermore it contains the missing proofs from the paper in
+the file `proofs.txt`.
 
 
 ## Building
